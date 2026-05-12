@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "about": "SAMPLE ONLY — Replace all places and links after walking the campus with hospital engineering / admin. Directions are not medical advice.",
+  "places": [
+    {"id": "main_entrance", "label": "Main entrance — مین داخلہ"},
+    {"id": "reception", "label": "Reception / help desk — ریسپشن"},
+    {"id": "emergency", "label": "Accident & Emergency — ایمرجنسی"},
+    {"id": "opd_plaza", "label": "OPD plaza — اوپیڈی"},
+    {"id": "pharmacy", "label": "Pharmacy — دواخانہ"},
+    {"id": "radiology", "label": "Radiology (X‑ray / CT area) — ریڈیالوجی"},
+    {"id": "lab", "label": "Pathology lab — لیب"},
+    {"id": "lift_block_a", "label": "Lift lobby — Block A — لفٹ بلاک اے"},
+    {"id": "ward_male_general", "label": "Male general ward (example) — مردانہ جنرل وارڈ"},
+    {"id": "ward_female_general", "label": "Female general ward (example) — خواتین جنرل وارڈ"},
+    {"id": "icu", "label": "ICU — آئی سی یو"},
+    {"id": "surgery_ot", "label": "Operation theatre complex — آپریشن تھیٹر"},
+    {"id": "canteen", "label": "Canteen / cafeteria — کیفے ٹیریا"}
+  ],
+  "links": [
+    {"from": "main_entrance", "to": "reception", "how": "سامنے وسیع کوریڈور میں چلیں — Enter the wide main corridor straight ahead."},
+    {"from": "reception", "to": "main_entrance", "how": "واپس مین داخلہ کی طرف — Walk back toward the main glass doors."},
+
+    {"from": "reception", "to": "opd_plaza", "how": "بائیں طرف OPD بلاک کی نشاندہی پر چلیں — Follow signs to OPD on your left."},
+    {"from": "opd_plaza", "to": "reception", "how": "ریسپشن کی طرف واپس — Return toward reception signs."},
+
+    {"from": "reception", "to": "emergency", "how": "دائیں طرف Red / Emergency نشانات — Turn right; follow red Emergency signage."},
+    {"from": "emergency", "to": "reception", "how": "ریسپشن زون کی طرف — Exit emergency bay toward reception zone."},
+
+    {"from": "opd_plaza", "to": "pharmacy", "how": "OPD کے قریب Pharmacy counter — Near OPD counters, follow Pharmacy signs."},
+    {"from": "pharmacy", "to": "opd_plaza", "how": "OPD واپس — Back to OPD waiting area."},
+
+    {"from": "opd_plaza", "to": "radiology", "how": "نیچے Basement / Ground radiology arrows — Follow Radiology arrows (ground or basement per local layout)."},
+    {"from": "radiology", "to": "opd_plaza", "how": "اوپر OPD سمت — Up to OPD level per stair / lift signs."},
+
+    {"from": "reception", "to": "lab", "how": "لیب بلاک کی نشاندہی — Follow Pathology / Lab signs from reception corridor."},
+    {"from": "lab", "to": "reception", "how": "ریسپشن کی طرف — Back to main reception corridor."},
+
+    {"from": "opd_plaza", "to": "lift_block_a", "how": "بلاک A لفٹ لابی — Walk to Block A lift lobby (signposted)."},
+    {"from": "lift_block_a", "to": "opd_plaza", "how": "OPD کی طرف — Return toward OPD plaza."},
+
+    {"from": "lift_block_a", "to": "ward_male_general", "how": "لفٹ سے منزل 2 / 3 (مثال) — Take lift; exit on floor marked for male wards (verify on site)."},
+    {"from": "ward_male_general", "to": "lift_block_a", "how": "لفٹ لابی واپس — Back to lift lobby of Block A."},
+
+    {"from": "lift_block_a", "to": "ward_female_general", "how": "لفٹ سے خواتین وارڈ والی منزل — Lift to floor marked for female wards (verify on site)."},
+    {"from": "ward_female_general", "to": "lift_block_a", "how": "لفٹ لابی واپس — Back to Block A lifts."},
+
+    {"from": "lift_block_a", "to": "icu", "how": "ICU عمارت/منزل کی نشاندہی — Follow ICU signage from lift lobby (floor per hospital)."},
+    {"from": "icu", "to": "lift_block_a", "how": "لفٹ لابی — Return to lift lobby."},
+
+    {"from": "lift_block_a", "to": "surgery_ot", "how": "OT complex / surgery block signs — Follow Operation Theatre / Surgery block signs."},
+    {"from": "surgery_ot", "to": "lift_block_a", "how": "لفٹ لابی — Back toward Block A lifts."},
+
+    {"from": "reception", "to": "canteen", "how": "بیرونی / adjacency کیفے سمت — Follow canteen signs (often near parking side — verify)."},
+    {"from": "canteen", "to": "reception", "how": "مین بلڈنگ واپس — Return toward main building entrance."}
+  ]
+}
