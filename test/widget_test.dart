@@ -4,10 +4,10 @@ import 'package:goodlucksoft/main.dart';
 
 void main() {
   testWidgets('Loads navigator home', (WidgetTester tester) async {
-    await tester.pumpWidget(const NishtarNavApp());
+    await tester.pumpWidget(const ApniLabApp());
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Nishtar'), findsWidgets);
-    expect(find.text('Show walking route'), findsOneWidget);
+    expect(find.textContaining('ApniLab.pk'), findsWidgets);
+    expect(find.textContaining('Dashboard'), findsWidgets);
   });
 }

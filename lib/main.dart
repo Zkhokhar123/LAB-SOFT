@@ -1,29 +1,25 @@
 import 'package:flutter/material.dart';
-
-import 'ui/nav_home_page.dart';
+import 'dashboard_screen.dart';
 
 void main() {
-  runApp(const NishtarNavApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const ApniLabApp());
 }
 
-class NishtarNavApp extends StatelessWidget {
-  const NishtarNavApp({super.key});
+class ApniLabApp extends StatelessWidget {
+  const ApniLabApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final seed = const Color(0xFF0B5F59);
     return MaterialApp(
-      title: 'Nishtar Navigator',
+      title: 'ApniLab.pk LMS',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        scaffoldBackgroundColor: const Color(0xFFF3F4F6),
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: seed,
-          brightness: Brightness.light,
-        ),
-        appBarTheme: const AppBarTheme(centerTitle: false),
       ),
-      home: const NavHomePage(),
+      home: const MainLayoutScreen(),
     );
   }
 }
