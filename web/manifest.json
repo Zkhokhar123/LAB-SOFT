@@ -1,11 +1,11 @@
 {
-    "name": "Nishtar Navigator",
-    "short_name": "Navigator",
+    "name": "ApniLab.pk LMS",
+    "short_name": "ApniLab",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#E8F5F3",
-    "theme_color": "#0B5F59",
-    "description": "Offline hospital wayfinding for Nishtar Multan (sample data).",
+    "background_color": "#FFFFFF",
+    "theme_color": "#1E3A8A",
+    "description": "ApniLab.pk Laboratory Management System - A complete workflow for clinical pathology and patient billing.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
