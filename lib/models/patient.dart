@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'lab_result.dart';
 
-enum PatientStatus { pendingSample, pendingReport, approved }
+enum PatientStatus { pendingSample, pendingReport, approved, pendingApproval }
 
 class Patient {
   final String id;

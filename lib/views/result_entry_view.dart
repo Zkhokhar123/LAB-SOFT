@@ -65,7 +65,7 @@ class _ResultEntryViewState extends State<ResultEntryView> {
 
     labController.savePatientResults(_selectedPatient!.id, results);
 
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Results Saved & Report Approved!')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Results Saved & Awaiting Final Approval!'), backgroundColor: Colors.orange));
     setState(() => _selectedPatient = null);
   }
 

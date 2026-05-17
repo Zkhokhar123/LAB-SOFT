@@ -10,7 +10,7 @@ import 'views/test_approve_view.dart';
 import 'views/doctor_commission_view.dart';
 import 'views/add_test_view.dart';
 import 'views/normal_ranges_view.dart';
-import 'views/test_categories_view.dart';
+import 'views/statement_view.dart';
 import 'views/general_settings_view.dart';
 import 'views/branch_setup_view.dart';
 import 'views/printer_settings_view.dart';
@@ -54,8 +54,12 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
         return const AddTestView();
       case 'Normal Ranges':
         return const NormalRangesView();
-      case 'Test Categories':
-        return const TestCategoriesView();
+      case 'Daily Summary':
+        return const StatementView(initialTab: 0);
+      case 'Monthly Report':
+        return const StatementView(initialTab: 1);
+      case 'Income Statement':
+        return const StatementView(initialTab: 2);
       case 'General Settings':
         return const GeneralSettingsView();
       case 'Branch Setup':
@@ -313,12 +317,10 @@ class _NavBar extends StatelessWidget {
             children: [
               _NavButton('Dashboard', Icons.speed, isActive: currentView == 'Dashboard', onNavigate: onNavigate),
               _NavDropdown('Lab Settings', items: const ['General Settings', 'Branch Setup', 'Printer Settings'], onNavigate: onNavigate),
-              _NavDropdown('Test Setting', items: const ['Add Test', 'Test Categories', 'Normal Ranges'], onNavigate: onNavigate),
+              _NavDropdown('Test Setting', items: const ['Add Test', 'Normal Ranges'], onNavigate: onNavigate),
               _NavDropdown('Patients', items: const ['New Patient', 'Patient List', 'Sample Receiving', 'Pending Results', 'Test Approval'], onNavigate: onNavigate),
               _NavDropdown('Statements', items: const ['Daily Summary', 'Monthly Report', 'Income Statement'], onNavigate: onNavigate),
               _NavDropdown('Reference Statements', items: const ['Doctor Commission', 'Lab Reference'], onNavigate: onNavigate),
-              _NavDropdown('Accounts', items: const ['Chart of Accounts', 'Vouchers', 'Ledger'], onNavigate: onNavigate),
-              _NavDropdown('Users', items: const ['All Users', 'Roles & Permissions', 'Audit Log'], onNavigate: onNavigate),
             ],
           ),
           Row(

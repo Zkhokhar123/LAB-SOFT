@@ -44,9 +44,49 @@ class LabController extends ChangeNotifier {
         TestParameter(name: 'Platelet Count', unit: 'thou/mm3', minValue: 150.0, maxValue: 450.0),
       ]
     ),
-    const LabTest(code: 'LFT', name: 'Liver Function Test', price: 1500, category: 'Biochemistry', unit: 'U/L', minValue: 0, maxValue: 40),
-    const LabTest(code: 'RFT', name: 'Renal Function Test', price: 1200, category: 'Biochemistry', unit: 'mg/dL', minValue: 0.6, maxValue: 1.2),
-    const LabTest(code: 'BSL', name: 'Blood Sugar Level', price: 200, category: 'Biochemistry', unit: 'mg/dL', minValue: 70, maxValue: 110),
+    const LabTest(
+      code: 'LFT', 
+      name: 'Liver Function Test', 
+      price: 1500, 
+      category: 'Biochemistry',
+      parameters: [
+        TestParameter(name: 'Bilirubin Total', unit: 'mg/dL', minValue: 0.1, maxValue: 1.2),
+        TestParameter(name: 'Bilirubin Direct', unit: 'mg/dL', minValue: 0.0, maxValue: 0.3),
+        TestParameter(name: 'Bilirubin Indirect', unit: 'mg/dL', minValue: 0.1, maxValue: 1.0),
+        TestParameter(name: 'SGPT (ALT)', unit: 'U/L', minValue: 5.0, maxValue: 40.0),
+        TestParameter(name: 'SGOT (AST)', unit: 'U/L', minValue: 5.0, maxValue: 40.0),
+        TestParameter(name: 'Alkaline Phosphatase (ALP)', unit: 'U/L', minValue: 40.0, maxValue: 129.0),
+        TestParameter(name: 'Total Protein', unit: 'g/dL', minValue: 6.0, maxValue: 8.0),
+        TestParameter(name: 'Albumin', unit: 'g/dL', minValue: 3.5, maxValue: 5.0),
+        TestParameter(name: 'Globulin', unit: 'g/dL', minValue: 2.0, maxValue: 3.5),
+        TestParameter(name: 'A/G Ratio', unit: 'Ratio', minValue: 1.0, maxValue: 2.0),
+      ]
+    ),
+    const LabTest(
+      code: 'RFT', 
+      name: 'Renal Function Test', 
+      price: 1200, 
+      category: 'Biochemistry',
+      parameters: [
+        TestParameter(name: 'Blood Urea', unit: 'mg/dL', minValue: 15.0, maxValue: 45.0),
+        TestParameter(name: 'Serum Creatinine', unit: 'mg/dL', minValue: 0.6, maxValue: 1.2),
+        TestParameter(name: 'Serum Uric Acid', unit: 'mg/dL', minValue: 3.0, maxValue: 7.0),
+        TestParameter(name: 'Serum Sodium', unit: 'mEq/L', minValue: 135.0, maxValue: 145.0),
+        TestParameter(name: 'Serum Potassium', unit: 'mEq/L', minValue: 3.5, maxValue: 5.0),
+        TestParameter(name: 'Serum Chloride', unit: 'mEq/L', minValue: 95.0, maxValue: 105.0),
+      ]
+    ),
+    const LabTest(
+      code: 'BSL', 
+      name: 'Blood Sugar Level', 
+      price: 200, 
+      category: 'Biochemistry',
+      parameters: [
+        TestParameter(name: 'Blood Sugar Fasting', unit: 'mg/dL', minValue: 70.0, maxValue: 100.0),
+        TestParameter(name: 'Blood Sugar Random', unit: 'mg/dL', minValue: 70.0, maxValue: 140.0),
+        TestParameter(name: 'Blood Sugar 2 Hours PP', unit: 'mg/dL', minValue: 70.0, maxValue: 140.0),
+      ]
+    ),
   ];
 
   List<String> _categories = ['Biochemistry', 'Hematology', 'Serology', 'Hormones', 'Clinical Pathology', 'Microbiology'];
@@ -93,6 +133,65 @@ class LabController extends ChangeNotifier {
     if (testsJson != null) {
       final List<dynamic> decoded = json.decode(testsJson);
       _availableTests = decoded.map((t) => LabTest.fromJson(t)).toList();
+
+      // Database Migration: Upgrade existing LFT, RFT, BSL tests to detailed versions if they are currently single-valued/empty
+      bool didMigrate = false;
+      for (int i = 0; i < _availableTests.length; i++) {
+        final test = _availableTests[i];
+        if (test.code == 'LFT' && test.parameters.isEmpty) {
+          _availableTests[i] = const LabTest(
+            code: 'LFT',
+            name: 'Liver Function Test',
+            price: 1500,
+            category: 'Biochemistry',
+            parameters: [
+              TestParameter(name: 'Bilirubin Total', unit: 'mg/dL', minValue: 0.1, maxValue: 1.2),
+              TestParameter(name: 'Bilirubin Direct', unit: 'mg/dL', minValue: 0.0, maxValue: 0.3),
+              TestParameter(name: 'Bilirubin Indirect', unit: 'mg/dL', minValue: 0.1, maxValue: 1.0),
+              TestParameter(name: 'SGPT (ALT)', unit: 'U/L', minValue: 5.0, maxValue: 40.0),
+              TestParameter(name: 'SGOT (AST)', unit: 'U/L', minValue: 5.0, maxValue: 40.0),
+              TestParameter(name: 'Alkaline Phosphatase (ALP)', unit: 'U/L', minValue: 40.0, maxValue: 129.0),
+              TestParameter(name: 'Total Protein', unit: 'g/dL', minValue: 6.0, maxValue: 8.0),
+              TestParameter(name: 'Albumin', unit: 'g/dL', minValue: 3.5, maxValue: 5.0),
+              TestParameter(name: 'Globulin', unit: 'g/dL', minValue: 2.0, maxValue: 3.5),
+              TestParameter(name: 'A/G Ratio', unit: 'Ratio', minValue: 1.0, maxValue: 2.0),
+            ],
+          );
+          didMigrate = true;
+        } else if (test.code == 'RFT' && test.parameters.isEmpty) {
+          _availableTests[i] = const LabTest(
+            code: 'RFT',
+            name: 'Renal Function Test',
+            price: 1200,
+            category: 'Biochemistry',
+            parameters: [
+              TestParameter(name: 'Blood Urea', unit: 'mg/dL', minValue: 15.0, maxValue: 45.0),
+              TestParameter(name: 'Serum Creatinine', unit: 'mg/dL', minValue: 0.6, maxValue: 1.2),
+              TestParameter(name: 'Serum Uric Acid', unit: 'mg/dL', minValue: 3.0, maxValue: 7.0),
+              TestParameter(name: 'Serum Sodium', unit: 'mEq/L', minValue: 135.0, maxValue: 145.0),
+              TestParameter(name: 'Serum Potassium', unit: 'mEq/L', minValue: 3.5, maxValue: 5.0),
+              TestParameter(name: 'Serum Chloride', unit: 'mEq/L', minValue: 95.0, maxValue: 105.0),
+            ],
+          );
+          didMigrate = true;
+        } else if (test.code == 'BSL' && test.parameters.isEmpty) {
+          _availableTests[i] = const LabTest(
+            code: 'BSL',
+            name: 'Blood Sugar Level',
+            price: 200,
+            category: 'Biochemistry',
+            parameters: [
+              TestParameter(name: 'Blood Sugar Fasting', unit: 'mg/dL', minValue: 70.0, maxValue: 100.0),
+              TestParameter(name: 'Blood Sugar Random', unit: 'mg/dL', minValue: 70.0, maxValue: 140.0),
+              TestParameter(name: 'Blood Sugar 2 Hours PP', unit: 'mg/dL', minValue: 70.0, maxValue: 140.0),
+            ],
+          );
+          didMigrate = true;
+        }
+      }
+      if (didMigrate) {
+        _saveData();
+      }
     }
 
     // Load Categories
@@ -208,7 +307,7 @@ class LabController extends ChangeNotifier {
     if (index != -1) {
       _patients[index] = _patients[index].copyWith(
         results: results,
-        status: PatientStatus.approved,
+        status: PatientStatus.pendingApproval,
       );
       _saveData();
     }

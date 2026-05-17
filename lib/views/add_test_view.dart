@@ -20,7 +20,7 @@ class _AddTestViewState extends State<AddTestView> {
   // For parameters
   final List<TestParameter> _tempParameters = [];
 
-  void _addParameter() {
+  void _addParameter(StateSetter setDialogState) {
     final nameController = TextEditingController();
     final unitController = TextEditingController();
     final minController = TextEditingController();
@@ -51,7 +51,7 @@ class _AddTestViewState extends State<AddTestView> {
           ElevatedButton(
             onPressed: () {
               if (nameController.text.isNotEmpty) {
-                setState(() {
+                setDialogState(() {
                   _tempParameters.add(TestParameter(
                     name: nameController.text,
                     unit: unitController.text,
@@ -120,7 +120,11 @@ class _AddTestViewState extends State<AddTestView> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Test Parameters', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
-                        TextButton.icon(onPressed: _addParameter, icon: const Icon(Icons.add), label: const Text('Add Param')),
+                        TextButton.icon(
+                          onPressed: () => _addParameter(setDialogState),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Param'),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -128,7 +132,10 @@ class _AddTestViewState extends State<AddTestView> {
                       dense: true,
                       title: Text(p.name),
                       subtitle: Text('${p.minValue} - ${p.maxValue} ${p.unit}'),
-                      trailing: IconButton(icon: const Icon(Icons.delete, size: 18), onPressed: () => setState(() => _tempParameters.remove(p))),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, size: 18),
+                        onPressed: () => setDialogState(() => _tempParameters.remove(p)),
+                      ),
                     )),
                   ],
                 ),
