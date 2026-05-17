@@ -86,26 +86,20 @@ class _StatementViewState extends State<StatementView> with SingleTickerProvider
         return Scaffold(
           backgroundColor: Colors.grey[50],
           appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(60),
+            preferredSize: const Size.fromHeight(72),
             child: Container(
               color: Colors.white,
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    TabBar(
-                      controller: _tabController,
-                      labelColor: Colors.blue[900],
-                      unselectedLabelColor: Colors.grey[600],
-                      indicatorColor: Colors.blue[900],
-                      indicatorWeight: 3,
-                      tabs: const [
-                        Tab(icon: Icon(Icons.today), text: 'Daily Summary'),
-                        Tab(icon: Icon(Icons.calendar_month), text: 'Monthly Report'),
-                        Tab(icon: Icon(Icons.receipt_long), text: 'Income Statement'),
-                      ],
-                    ),
-                  ],
-                ),
+              child: TabBar(
+                controller: _tabController,
+                labelColor: Colors.blue[900],
+                unselectedLabelColor: Colors.grey[600],
+                indicatorColor: Colors.blue[900],
+                indicatorWeight: 3,
+                tabs: const [
+                  Tab(icon: Icon(Icons.today), text: 'Daily Summary'),
+                  Tab(icon: Icon(Icons.calendar_month), text: 'Monthly Report'),
+                  Tab(icon: Icon(Icons.receipt_long), text: 'Income Statement'),
+                ],
               ),
             ),
           ),
