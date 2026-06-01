@@ -1,5 +1,10 @@
+import 'dart:convert';
+import 'dart:io' show Directory, File;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../controllers/lab_controller.dart';
+import '../controllers/auth_controller.dart';
 import '../models/patient.dart';
 import '../models/doctor.dart';
 
@@ -313,15 +318,30 @@ class _StatementViewState extends State<StatementView> with SingleTickerProvider
                   ),
                 ],
               ),
-              ElevatedButton.icon(
-                onPressed: () => _printMonthlyStatement('${_months[_selectedMonthlyMonth - 1]} $_selectedMonthlyYear', monthlyPatients, grossRevenue, totalDiscounts, netRevenue, totalCommissions, netProfit),
-                icon: const Icon(Icons.print),
-                label: const Text('Print Statement'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal[800],
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                ),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _showBackupRestoreDialog(),
+                    icon: const Icon(Icons.settings_backup_restore),
+                    label: const Text('Backup / Restore'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[900],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: () => _printMonthlyStatement('${_months[_selectedMonthlyMonth - 1]} $_selectedMonthlyYear', monthlyPatients, grossRevenue, totalDiscounts, netRevenue, totalCommissions, netProfit),
+                    icon: const Icon(Icons.print),
+                    label: const Text('Print Statement'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal[800],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -927,5 +947,341 @@ class _StatementViewState extends State<StatementView> with SingleTickerProvider
         ),
       ),
     );
+  }
+
+  // ==========================================
+  // ENTERPRISE OFFLINE BACKUP & RESTORE DIALOGS
+  // ==========================================
+
+  void _showBackupRestoreDialog() {
+    final textController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Container(
+            width: 700,
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.settings_backup_restore, color: Colors.blue[900], size: 28),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Monthly Database Backup & Restore',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Manage your clinical data. Backups contain all patient reports, tests, configurations, and login details.',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+                const SizedBox(height: 24),
+                const Divider(),
+                const SizedBox(height: 16),
+
+                // Dual Columns
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Column 1: Save Backup
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('💾 Step 1: Create Backup', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.indigo)),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Save the entire database. It will automatically create a file inside your computer at C:\\ApniLab_Backups.',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _createBackup(context);
+                              },
+                              icon: const Icon(Icons.save_alt),
+                              label: const Text('Save Local Backup File'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.indigo[800],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    Container(width: 1, height: 180, color: Colors.grey[200]),
+                    const SizedBox(width: 24),
+
+                    // Column 2: Restore Backup
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('🔄 Step 2: Restore Backup', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.teal)),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Paste your backup JSON code below to restore your clinic record instantly.',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: textController,
+                            maxLines: 2,
+                            decoration: const InputDecoration(
+                              hintText: 'Paste backup code here...',
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.all(10),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                final code = textController.text;
+                                if (code.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Please paste a backup code first!'), backgroundColor: Colors.orange),
+                                  );
+                                  return;
+                                }
+                                Navigator.pop(context);
+                                _restoreBackup(context, code);
+                              },
+                              icon: const Icon(Icons.restore),
+                              label: const Text('Restore Database'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.teal[800],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+                const Divider(),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _createBackup(BuildContext context) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      final backup = {
+        'backup_version': '1.0.0',
+        'backup_date': DateTime.now().toIso8601String(),
+        'backup_month_year': '${_months[_selectedMonthlyMonth - 1]}_$_selectedMonthlyYear',
+        
+        // Lab Data
+        'patients': prefs.getStringList('patients') ?? [],
+        'doctors': prefs.getString('doctors') ?? '[]',
+        'lab_tests': prefs.getString('lab_tests') ?? '[]',
+        'categories': prefs.getStringList('categories') ?? [],
+        'lab_name': prefs.getString('lab_name') ?? 'ApniLab.pk',
+        'lab_address': prefs.getString('lab_address') ?? '123 Medical Complex, City',
+        'lab_phone': prefs.getString('lab_phone') ?? '0300-1234567',
+        'branches': prefs.getStringList('branches') ?? [],
+        'printer_type': prefs.getString('printer_type') ?? 'A4 / Laser',
+        
+        // Auth Data
+        'offline_users': prefs.getString('offline_users') ?? '{}',
+      };
+      
+      final jsonString = jsonEncode(backup);
+      final monthName = _months[_selectedMonthlyMonth - 1];
+      final fileName = 'ApniLab_Backup_${monthName}_$_selectedMonthlyYear.json';
+      
+      String savePath = "";
+      bool fileSaved = false;
+      
+      try {
+        final directory = Directory('C:\\ApniLab_Backups');
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        final file = File('C:\\ApniLab_Backups\\$fileName');
+        await file.writeAsString(jsonString);
+        savePath = file.path;
+        fileSaved = true;
+      } catch (ioError) {
+        // Fallback for non-windows environment
+      }
+
+      // Copy to Clipboard as secondary bulletproof option
+      await Clipboard.setData(ClipboardData(text: jsonString));
+      
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
+            title: const Text('Backup Successful!'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('All statements and clinical records for $monthName $_selectedMonthlyYear have been backed up.'),
+                const SizedBox(height: 16),
+                if (fileSaved) ...[
+                  const Text('📁 Saved on your PC at:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.teal[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.teal[100]!),
+                    ),
+                    child: Text(
+                      savePath,
+                      style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: Colors.teal, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                const Text('📋 Clipboard Copy Status:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 4),
+                const Text(
+                  'Backup code has also been automatically copied to your clipboard. You can paste it in any text file or save in a USB.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Backup failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _restoreBackup(BuildContext context, String jsonString) async {
+    try {
+      final decoded = jsonDecode(jsonString.trim()) as Map<String, dynamic>;
+      
+      if (!decoded.containsKey('backup_version') || !decoded.containsKey('patients')) {
+        throw 'Invalid backup code format!';
+      }
+      
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Restore Lab Data
+      if (decoded['patients'] is List) {
+        final List<String> patients = List<String>.from(decoded['patients']);
+        await prefs.setStringList('patients', patients);
+      }
+      if (decoded.containsKey('doctors')) {
+        await prefs.setString('doctors', decoded['doctors'].toString());
+      }
+      if (decoded.containsKey('lab_tests')) {
+        await prefs.setString('lab_tests', decoded['lab_tests'].toString());
+      }
+      if (decoded['categories'] is List) {
+        await prefs.setStringList('categories', List<String>.from(decoded['categories']));
+      }
+      if (decoded.containsKey('lab_name')) {
+        await prefs.setString('lab_name', decoded['lab_name'].toString());
+      }
+      if (decoded.containsKey('lab_address')) {
+        await prefs.setString('lab_address', decoded['lab_address'].toString());
+      }
+      if (decoded.containsKey('lab_phone')) {
+        await prefs.setString('lab_phone', decoded['lab_phone'].toString());
+      }
+      if (decoded['branches'] is List) {
+        await prefs.setStringList('branches', List<String>.from(decoded['branches']));
+      }
+      if (decoded.containsKey('printer_type')) {
+        await prefs.setString('printer_type', decoded['printer_type'].toString());
+      }
+      
+      // Restore Auth Data
+      if (decoded.containsKey('offline_users')) {
+        await prefs.setString('offline_users', decoded['offline_users'].toString());
+      }
+
+      // Dynamic real-time reload of both controllers
+      await labController.reloadFromStorage();
+      await authController.reloadFromStorage();
+
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: const Icon(Icons.cloud_done, color: Colors.teal, size: 48),
+            title: const Text('Database Restored Successfully!'),
+            content: const Text(
+              'All patient entries, financial records, configurations, and offline credentials have been fully loaded.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Great!'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            title: const Text('Restore Failed'),
+            content: Text('Could not restore the data. Error: $e\n\nPlease ensure you pasted a valid, unmodified backup code.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 }

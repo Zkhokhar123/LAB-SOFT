@@ -75,7 +75,7 @@ class _ResultEntryViewState extends State<ResultEntryView> {
       listenable: labController,
       builder: (context, _) {
         final pendingPatients = labController.patients
-            .where((p) => p.status == PatientStatus.pendingReport || p.status == PatientStatus.pendingSample)
+            .where((p) => p.status == PatientStatus.pendingReport)
             .toList();
 
         return SingleChildScrollView(

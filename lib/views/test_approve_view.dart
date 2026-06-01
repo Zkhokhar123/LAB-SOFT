@@ -418,7 +418,7 @@ class _TestApproveViewState extends State<TestApproveView> {
               ),
               const Divider(height: 24),
 
-              // A4 Clinical Document
+              // A4 Clinical Document Preview Sheet
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
@@ -430,145 +430,223 @@ class _TestApproveViewState extends State<TestApproveView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Clinical Letterhead
+                        // Letterhead matching SHAH-RUKN-ALAM Clinical Laboratory
                         Center(
                           child: Column(
                             children: [
                               Text(
                                 labController.labName.toUpperCase(),
-                                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.indigo, letterSpacing: 1.5),
+                                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.black, letterSpacing: 1.5),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                'CLINICAL LABORATORY',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black, letterSpacing: 1.2),
                               ),
                               const SizedBox(height: 6),
-                              Text(
-                                'Address: ${labController.labAddress} | Contact: ${labController.labPhone}',
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.location_on, size: 12, color: Colors.grey[800]),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    labController.labAddress.toUpperCase(),
+                                    style: TextStyle(fontSize: 10, color: Colors.grey[800], fontWeight: FontWeight.w600),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 4),
-                              const Text('Email: info@apnilab.pk | Website: www.apnilab.pk', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                              const SizedBox(height: 8),
-                              const Divider(thickness: 2),
+                              const SizedBox(height: 12),
+                              const Divider(thickness: 1.5, color: Colors.black),
                             ],
                           ),
                         ),
                         const SizedBox(height: 16),
 
-                        // Patient details box
+                        // Patient details box (Custom rectangular border matching the shared image)
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[300]!),
-                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.black, width: 1),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Column 1
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  RichText(text: TextSpan(style: const TextStyle(color: Colors.black87, fontSize: 13), children: [
-                                    const TextSpan(text: 'Patient Name: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                                    TextSpan(text: patient.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                  ])),
-                                  const SizedBox(height: 6),
-                                  RichText(text: TextSpan(style: const TextStyle(color: Colors.black87, fontSize: 13), children: [
-                                    const TextSpan(text: 'Case ID / Reg No: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                                    TextSpan(text: patient.id.substring(patient.id.length - 5).toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w600)),
-                                  ])),
-                                ],
+                              // Left Column: Patient Name & Age/Gender
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(color: Colors.black, fontSize: 13),
+                                        children: [
+                                          const TextSpan(text: "Patient's Name: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          TextSpan(text: patient.name.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(color: Colors.black, fontSize: 13),
+                                        children: [
+                                          const TextSpan(text: "Age / Gender: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          TextSpan(text: "${patient.age} Y / ${patient.gender.toUpperCase()}", style: const TextStyle(fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              // Column 2
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  RichText(text: TextSpan(style: const TextStyle(color: Colors.black87, fontSize: 13), children: [
-                                    const TextSpan(text: 'Referred By: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                                    TextSpan(text: patient.doctorName, style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
-                                  ])),
-                                  const SizedBox(height: 6),
-                                  RichText(text: TextSpan(style: const TextStyle(color: Colors.black87, fontSize: 13), children: [
-                                    const TextSpan(text: 'Registration Date: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                                    TextSpan(text: '${patient.date.day}/${patient.date.month}/${patient.date.year}'),
-                                  ])),
-                                ],
+                              // Right Column: Date & Referred Doctor
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(color: Colors.black, fontSize: 13),
+                                        children: [
+                                          const TextSpan(text: "Date : ", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          TextSpan(text: "${patient.date.day}/${patient.date.month}/${patient.date.year}", style: const TextStyle(fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(color: Colors.black, fontSize: 13),
+                                        children: [
+                                          const TextSpan(text: "REF BY: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          TextSpan(
+                                            text: patient.doctorName.toUpperCase(),
+                                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 24),
 
-                        // Report Title
-                        const Center(
-                          child: Column(
+                        // Shaded Parameters Header Bar (grey box CBE from photo)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            border: const Border(
+                              top: BorderSide(color: Colors.grey, width: 1),
+                              bottom: BorderSide(color: Colors.grey, width: 1),
+                            ),
+                          ),
+                          child: Row(
                             children: [
-                              Text(
-                                'CLINICAL LAB TEST REPORT',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo, letterSpacing: 1.1),
+                              Expanded(
+                                flex: 30,
+                                child: Text(
+                                  patient.testName.toUpperCase(),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black),
+                                ),
                               ),
-                              SizedBox(height: 4),
-                              Divider(indent: 200, endIndent: 200, color: Colors.indigo, thickness: 1.5),
+                              const Expanded(
+                                flex: 15,
+                                child: Text(
+                                  'OBSERVED',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black),
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 18,
+                                child: Text(
+                                  'UNIT',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black),
+                                ),
+                              ),
+                              const Expanded(
+                                flex: 25,
+                                child: Text(
+                                  'NORMAL VALUE',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black),
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 8),
 
-                        // Table of parameters
-                        Table(
-                          border: TableBorder(
-                            horizontalInside: BorderSide(color: Colors.grey[200]!, width: 1),
-                            bottom: BorderSide(color: Colors.grey[300]!, width: 1),
-                          ),
-                          columnWidths: const {
-                            0: FlexColumnWidth(2.5),
-                            1: FlexColumnWidth(1.2),
-                            2: FlexColumnWidth(1),
-                            3: FlexColumnWidth(1.5),
-                            4: FlexColumnWidth(1),
-                          },
-                          children: [
-                            // Table Header Row
-                            TableRow(
-                              decoration: BoxDecoration(color: Colors.grey[50]),
-                              children: const [
-                                Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8), child: Text('Parameter Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.indigo))),
-                                Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8), child: Text('Observed Value', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.indigo))),
-                                Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8), child: Text('Unit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.indigo))),
-                                Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8), child: Text('Reference Range', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.indigo))),
-                                Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8), child: Text('Flag', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.indigo))),
-                              ],
-                            ),
-                            // Data Rows
-                            ...patient.results.map((r) {
-                              final flag = _determineFlag(r.resultValue, r.referenceRange);
-                              Color valColor = Colors.black87;
-                              String flagText = '';
-                              FontWeight valWeight = FontWeight.normal;
+                        // List of parameter results with clean table alignments (no borders inside)
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: patient.results.length,
+                          itemBuilder: (context, idx) {
+                            final r = patient.results[idx];
+                            final flag = _determineFlag(r.resultValue, r.referenceRange);
+                            Color valColor = Colors.black;
+                            FontWeight valWeight = FontWeight.normal;
+                            String valueSuffix = '';
 
-                              if (flag == 'HIGH') {
-                                valColor = Colors.red[800]!;
-                                flagText = 'High (H)';
-                                valWeight = FontWeight.bold;
-                              } else if (flag == 'LOW') {
-                                valColor = Colors.blue[800]!;
-                                flagText = 'Low (L)';
-                                valWeight = FontWeight.bold;
-                              }
+                            if (flag == 'HIGH') {
+                              valColor = Colors.red[900]!;
+                              valWeight = FontWeight.bold;
+                              valueSuffix = ' (H)';
+                            } else if (flag == 'LOW') {
+                              valColor = Colors.blue[900]!;
+                              valWeight = FontWeight.bold;
+                              valueSuffix = ' (L)';
+                            }
 
-                              return TableRow(
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              child: Row(
                                 children: [
-                                  Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8), child: Text(r.testName, style: const TextStyle(fontSize: 11.5))),
-                                  Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8), child: Text(r.resultValue, style: TextStyle(fontSize: 11.5, color: valColor, fontWeight: valWeight))),
-                                  Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8), child: Text(r.unit, style: const TextStyle(fontSize: 11.5))),
-                                  Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8), child: Text(r.referenceRange, style: const TextStyle(fontSize: 11.5))),
-                                  Padding(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8), child: Text(flagText, style: TextStyle(fontSize: 11.5, color: valColor, fontWeight: FontWeight.bold))),
+                                  // Parameter name
+                                  Expanded(
+                                    flex: 30,
+                                    child: Text(
+                                      r.testName,
+                                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                    ),
+                                  ),
+                                  // Observed value
+                                  Expanded(
+                                    flex: 15,
+                                    child: Text(
+                                      '${r.resultValue}$valueSuffix',
+                                      style: TextStyle(fontSize: 13, color: valColor, fontWeight: valWeight),
+                                    ),
+                                  ),
+                                  // Unit
+                                  Expanded(
+                                    flex: 18,
+                                    child: Text(
+                                      r.unit,
+                                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                    ),
+                                  ),
+                                  // Reference range / Normal range
+                                  Expanded(
+                                    flex: 25,
+                                    child: Text(
+                                      r.referenceRange,
+                                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                    ),
+                                  ),
                                 ],
-                              );
-                            }),
-                          ],
+                              ),
+                            );
+                          },
                         ),
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 60),
 
-                        // Pathology Signature area
+                        // Signatures & Authorization Area
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -576,7 +654,7 @@ class _TestApproveViewState extends State<TestApproveView> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('Technologist Signature', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                                SizedBox(height: 25),
+                                SizedBox(height: 30),
                                 Text('____________________', style: TextStyle(color: Colors.grey, fontSize: 11)),
                               ],
                             ),
@@ -602,11 +680,22 @@ class _TestApproveViewState extends State<TestApproveView> {
                           ],
                         ),
                         const SizedBox(height: 40),
-                        const Divider(),
+
+                        // Center Divider line & Disclaimer match (exactly like photo bottom)
+                        Divider(thickness: 1, color: Colors.grey[400]),
+                        const SizedBox(height: 12),
                         const Center(
                           child: Text(
-                            '*** End of Clinical Lab Report ***',
-                            style: TextStyle(fontSize: 11, color: Colors.grey, fontStyle: FontStyle.italic),
+                            'Provision: All tests are performed with utmost care, in case of any discordance with Clinical Correlation, please repeat the test.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 10.5, fontStyle: FontStyle.italic, color: Colors.black87),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Center(
+                          child: Text(
+                            'This report is not valid for any court of law',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, decoration: TextDecoration.underline, color: Colors.black87),
                           ),
                         ),
                       ],
@@ -621,3 +710,4 @@ class _TestApproveViewState extends State<TestApproveView> {
     );
   }
 }
+

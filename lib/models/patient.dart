@@ -13,6 +13,12 @@ class Patient {
   final DateTime date;
   final String doctorName;
   final List<LabResult> results;
+  final String gender;
+  final String age;
+  final String mobile;
+  final String address;
+  final String branch;
+  final double receivedAmount;
 
   Patient({
     required this.id,
@@ -24,6 +30,12 @@ class Patient {
     required this.date,
     this.doctorName = 'Self',
     this.results = const [],
+    this.gender = '',
+    this.age = '',
+    this.mobile = '',
+    this.address = '',
+    this.branch = '',
+    this.receivedAmount = 0.0,
   });
 
   Map<String, dynamic> toMap() {
@@ -37,6 +49,12 @@ class Patient {
       'date': date.toIso8601String(),
       'doctorName': doctorName,
       'results': results.map((x) => x.toMap()).toList(),
+      'gender': gender,
+      'age': age,
+      'mobile': mobile,
+      'address': address,
+      'branch': branch,
+      'receivedAmount': receivedAmount,
     };
   }
 
@@ -53,6 +71,12 @@ class Patient {
       results: map['results'] != null 
           ? List<LabResult>.from(map['results']?.map((x) => LabResult.fromMap(x)))
           : const [],
+      gender: map['gender'] ?? '',
+      age: map['age'] ?? '',
+      mobile: map['mobile'] ?? '',
+      address: map['address'] ?? '',
+      branch: map['branch'] ?? '',
+      receivedAmount: map['receivedAmount'] ?? 0.0,
     );
   }
 
@@ -70,6 +94,12 @@ class Patient {
     DateTime? date,
     String? doctorName,
     List<LabResult>? results,
+    String? gender,
+    String? age,
+    String? mobile,
+    String? address,
+    String? branch,
+    double? receivedAmount,
   }) {
     return Patient(
       id: id ?? this.id,
@@ -81,6 +111,12 @@ class Patient {
       date: date ?? this.date,
       doctorName: doctorName ?? this.doctorName,
       results: results ?? this.results,
+      gender: gender ?? this.gender,
+      age: age ?? this.age,
+      mobile: mobile ?? this.mobile,
+      address: address ?? this.address,
+      branch: branch ?? this.branch,
+      receivedAmount: receivedAmount ?? this.receivedAmount,
     );
   }
 }

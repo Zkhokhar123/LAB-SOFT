@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'controllers/lab_controller.dart';
-import 'dialogs/add_patient_dialog.dart';
+import 'controllers/auth_controller.dart';
 import 'models/patient.dart';
 import 'views/patient_registration_view.dart';
 import 'views/result_entry_view.dart';
@@ -14,6 +14,7 @@ import 'views/statement_view.dart';
 import 'views/general_settings_view.dart';
 import 'views/branch_setup_view.dart';
 import 'views/printer_settings_view.dart';
+import 'views/lab_reference_view.dart';
 
 class MainLayoutScreen extends StatefulWidget {
   const MainLayoutScreen({super.key});
@@ -50,6 +51,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
         return const TestApproveView();
       case 'Doctor Commission':
         return const DoctorCommissionView();
+      case 'Lab Reference':
+        return const LabReferenceView();
       case 'Add Test':
         return const AddTestView();
       case 'Normal Ranges':
@@ -84,7 +87,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           Expanded(
             child: _buildCurrentView(),
           ),
-          const _WhatsAppBanner(),
+
         ],
       ),
     );
@@ -117,58 +120,412 @@ class PlaceholderView extends StatelessWidget {
   }
 }
 
-class PatientListView extends StatelessWidget {
+class PatientListView extends StatefulWidget {
   const PatientListView({super.key});
+
+  @override
+  State<PatientListView> createState() => _PatientListViewState();
+}
+
+class _PatientListViewState extends State<PatientListView> {
+  String _searchQuery = '';
+  String _statusFilter = 'Show All';
+
+  // Reuse same flag logic as TestApproveView
+  String _determineFlag(String valueStr, String rangeStr) {
+    final val = double.tryParse(valueStr.trim());
+    if (val == null) return '';
+    final parts = rangeStr.split('-');
+    if (parts.length != 2) return '';
+    final minVal = double.tryParse(parts[0].trim());
+    final maxVal = double.tryParse(parts[1].trim());
+    if (minVal == null || maxVal == null) return '';
+    if (val < minVal) return 'LOW';
+    if (val > maxVal) return 'HIGH';
+    return 'NORMAL';
+  }
+
+  void _showPrintPreview(BuildContext context, Patient patient) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.all(24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 850,
+          height: double.infinity,
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            children: [
+              // Header bar
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.print, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Print Preview — ${patient.name}  |  Status: ${patient.status == PatientStatus.approved ? "Approved ✅" : patient.status.name}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Report Slip sent to Laser Printer successfully!'),
+                              backgroundColor: Colors.teal,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.print),
+                        label: const Text('Confirm Print'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal[800],
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Close'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const Divider(height: 24),
+
+              // A4 Preview
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    color: Colors.white,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 40),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Letterhead
+                        Center(
+                          child: Column(
+                            children: [
+                              Text(
+                                labController.labName.toUpperCase(),
+                                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text('CLINICAL LABORATORY',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.location_on, size: 12, color: Colors.grey[800]),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    labController.labAddress.toUpperCase(),
+                                    style: TextStyle(fontSize: 10, color: Colors.grey[800], fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              const Divider(thickness: 1.5, color: Colors.black),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Patient info box
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 1)),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(color: Colors.black, fontSize: 13),
+                                        children: [
+                                          const TextSpan(text: "Patient's Name: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          TextSpan(text: patient.name.toUpperCase()),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(color: Colors.black, fontSize: 13),
+                                        children: [
+                                          const TextSpan(text: "Age / Gender: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          TextSpan(text: "${patient.age} Y / ${patient.gender.toUpperCase()}"),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(color: Colors.black, fontSize: 13),
+                                        children: [
+                                          const TextSpan(text: "Date : ", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          TextSpan(text: "${patient.date.day}/${patient.date.month}/${patient.date.year}"),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(color: Colors.black, fontSize: 13),
+                                        children: [
+                                          const TextSpan(text: "REF BY: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          TextSpan(text: patient.doctorName.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Results header
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            border: const Border(
+                              top: BorderSide(color: Colors.grey),
+                              bottom: BorderSide(color: Colors.grey),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(flex: 30, child: Text(patient.testName.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+                              const Expanded(flex: 15, child: Text('OBSERVED', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                              const Expanded(flex: 18, child: Text('UNIT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                              const Expanded(flex: 25, child: Text('NORMAL VALUE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Results rows
+                        if (patient.results.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Center(child: Text('No results entered yet.', style: TextStyle(color: Colors.grey))),
+                          )
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: patient.results.length,
+                            itemBuilder: (context, idx) {
+                              final r = patient.results[idx];
+                              final flag = _determineFlag(r.resultValue, r.referenceRange);
+                              Color valColor = Colors.black;
+                              FontWeight valWeight = FontWeight.normal;
+                              String suffix = '';
+                              if (flag == 'HIGH') { valColor = Colors.red[900]!; valWeight = FontWeight.bold; suffix = ' (H)'; }
+                              if (flag == 'LOW')  { valColor = Colors.blue[900]!; valWeight = FontWeight.bold; suffix = ' (L)'; }
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                child: Row(
+                                  children: [
+                                    Expanded(flex: 30, child: Text(r.testName, style: const TextStyle(fontSize: 13))),
+                                    Expanded(flex: 15, child: Text('${r.resultValue}$suffix', style: TextStyle(fontSize: 13, color: valColor, fontWeight: valWeight))),
+                                    Expanded(flex: 18, child: Text(r.unit, style: const TextStyle(fontSize: 13))),
+                                    Expanded(flex: 25, child: Text(r.referenceRange, style: const TextStyle(fontSize: 13))),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: labController,
       builder: (context, _) {
+        // Apply search + status filter
+        final filtered = labController.patients.where((p) {
+          final q = _searchQuery.toLowerCase();
+          final matchSearch = q.isEmpty ||
+              p.name.toLowerCase().contains(q) ||
+              p.id.toLowerCase().contains(q) ||
+              p.testName.toLowerCase().contains(q) ||
+              p.doctorName.toLowerCase().contains(q);
+
+          if (!matchSearch) return false;
+
+          switch (_statusFilter) {
+            case 'Approved':      return p.status == PatientStatus.approved;
+            case 'Pending Sample': return p.status == PatientStatus.pendingSample;
+            case 'Pending Report': return p.status == PatientStatus.pendingReport;
+            case 'Pending Approval': return p.status == PatientStatus.pendingApproval;
+            default:              return true;
+          }
+        }).toList();
+
         return SingleChildScrollView(
           padding: const EdgeInsets.all(32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Patient List', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+
+              // Search + Filter bar
+              Card(
+                color: Colors.white,
+                elevation: 1,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            labelText: 'Search by Name / ID / Test / Doctor...',
+                            prefixIcon: Icon(Icons.search),
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                          onChanged: (v) => setState(() => _searchQuery = v),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 1,
+                        child: DropdownButtonFormField<String>(
+                          value: _statusFilter,
+                          decoration: const InputDecoration(
+                            labelText: 'Status Filter',
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'Show All',         child: Text('Show All 👥')),
+                            DropdownMenuItem(value: 'Approved',         child: Text('Approved ✅')),
+                            DropdownMenuItem(value: 'Pending Approval', child: Text('Pending Approval ⏳')),
+                            DropdownMenuItem(value: 'Pending Report',   child: Text('Pending Results 📝')),
+                            DropdownMenuItem(value: 'Pending Sample',   child: Text('Pending Sample 🧪')),
+                          ],
+                          onChanged: (v) { if (v != null) setState(() => _statusFilter = v); },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Table
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 4, offset: const Offset(0, 2)),
-                  ],
+                  boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 4, offset: const Offset(0, 2))],
                 ),
-                child: DataTable(
-                  columns: const [
-                    DataColumn(label: Text('ID')),
-                    DataColumn(label: Text('Patient Name')),
-                    DataColumn(label: Text('Test Name')),
-                    DataColumn(label: Text('Amount')),
-                    DataColumn(label: Text('Status')),
-                    DataColumn(label: Text('Date')),
-                  ],
-                  rows: labController.patients.map((p) {
-                    return DataRow(cells: [
-                      DataCell(Text(p.id.substring(p.id.length - 4))),
-                      DataCell(Text(p.name)),
-                      DataCell(Text(p.testName)),
-                      DataCell(Text('Rs ${p.amount}')),
-                      DataCell(Chip(
-                        label: Text(p.status.name),
-                        backgroundColor: p.status == PatientStatus.approved ? Colors.green[100] : Colors.orange[100],
-                      )),
-                      DataCell(Text('${p.date.day}/${p.date.month}/${p.date.year}')),
-                    ]);
-                  }).toList(),
-                ),
-              )
+                child: filtered.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 48),
+                        child: Center(child: Text('No patients match the filter.', style: TextStyle(color: Colors.grey, fontSize: 16))),
+                      )
+                    : DataTable(
+                        headingRowColor: WidgetStateProperty.all(Colors.blue[900]!.withAlpha(10)),
+                        columns: const [
+                          DataColumn(label: Text('ID',          style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Patient Name',style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Test Name',   style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Amount',      style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Status',      style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Date',        style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(label: Text('Print',       style: TextStyle(fontWeight: FontWeight.bold))),
+                        ],
+                        rows: filtered.map((p) {
+                          // Status chip color
+                          Color chipBg = Colors.orange[100]!;
+                          Color chipText = Colors.orange[900]!;
+                          String chipLabel = p.status.name;
+                          if (p.status == PatientStatus.approved) {
+                            chipBg = Colors.green[100]!; chipText = Colors.green[900]!; chipLabel = 'Approved ✅';
+                          } else if (p.status == PatientStatus.pendingApproval) {
+                            chipBg = Colors.amber[100]!; chipText = Colors.orange[900]!; chipLabel = 'Awaiting Approval';
+                          } else if (p.status == PatientStatus.pendingReport) {
+                            chipBg = Colors.blue[100]!; chipText = Colors.blue[900]!; chipLabel = 'Pending Results';
+                          } else if (p.status == PatientStatus.pendingSample) {
+                            chipBg = Colors.purple[100]!; chipText = Colors.purple[900]!; chipLabel = 'Pending Sample';
+                          }
+
+                          return DataRow(cells: [
+                            DataCell(Text(p.id.substring(p.id.length - 4), style: const TextStyle(fontWeight: FontWeight.bold))),
+                            DataCell(Text(p.name)),
+                            DataCell(Text(p.testName, style: TextStyle(color: Colors.blue[900]))),
+                            DataCell(Text('Rs ${p.amount}')),
+                            DataCell(Chip(
+                              label: Text(chipLabel, style: TextStyle(color: chipText, fontSize: 12, fontWeight: FontWeight.bold)),
+                              backgroundColor: chipBg,
+                            )),
+                            DataCell(Text('${p.date.day}/${p.date.month}/${p.date.year}')),
+                            DataCell(
+                              IconButton(
+                                icon: Icon(
+                                  Icons.print,
+                                  color: p.results.isNotEmpty ? Colors.teal : Colors.grey[400],
+                                ),
+                                tooltip: p.results.isNotEmpty ? 'Print Report' : 'No results yet',
+                                onPressed: p.results.isNotEmpty
+                                    ? () => _showPrintPreview(context, p)
+                                    : null,
+                              ),
+                            ),
+                          ]);
+                        }).toList(),
+                      ),
+              ),
             ],
           ),
         );
-      }
+      },
     );
   }
 }
@@ -199,31 +556,7 @@ class DashboardView extends StatelessWidget {
 
 // --- Components ---
 
-class _WhatsAppBanner extends StatelessWidget {
-  const _WhatsAppBanner();
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: const Column(
-        children: [
-          Text(
-            'WhatsApp : +92 321 944 711 3 | Email: info@apnilab.pk',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 4),
-          Text(
-            'Website: www.apnilab.pk | More Info : www.info.apnilab.pk',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _AppHeader extends StatelessWidget {
   const _AppHeader();
@@ -245,54 +578,91 @@ class _AppHeader extends StatelessWidget {
                   RichText(
                     text: const TextSpan(
                       style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1E3A8A)),
                       children: [
-                        TextSpan(text: 'A', style: TextStyle(color: Colors.orange)),
-                        TextSpan(text: 'PNI'),
-                        TextSpan(
-                            text: 'LAB.pk',
-                            style: TextStyle(color: Colors.lightBlue)),
+                        TextSpan(text: 'SHAH-RUKN-ALAM ', style: TextStyle(color: Color(0xFF1E3A8A))),
+                        TextSpan(text: 'LAB', style: TextStyle(color: Colors.lightBlue)),
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(width: 24),
-              PopupMenuButton<String>(
-                offset: const Offset(0, 40),
-                tooltip: 'Profile Options',
-                child: const Row(
-                  children: [
-                    Icon(Icons.person, color: Colors.teal, size: 18),
-                    SizedBox(width: 4),
-                    Text('Admin N/A',
-                        style: TextStyle(
-                            color: Colors.teal, fontWeight: FontWeight.w600)),
-                    Icon(Icons.arrow_drop_down, color: Colors.teal, size: 16),
-                  ],
-                ),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'profile', child: Text('Profile')),
-                  const PopupMenuItem(value: 'settings', child: Text('Settings')),
-                  const PopupMenuItem(value: 'logout', child: Text('Logout')),
-                ],
-                onSelected: (val) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Selected $val')));
+              ListenableBuilder(
+                listenable: authController,
+                builder: (context, _) {
+                  final rawUsername = authController.currentUsername;
+                  final displayUsername = rawUsername.isNotEmpty
+                      ? '${rawUsername[0].toUpperCase()}${rawUsername.substring(1)}'
+                      : 'Admin';
+
+                  return PopupMenuButton<String>(
+                    offset: const Offset(0, 40),
+                    tooltip: 'Profile Options',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.person, color: Colors.teal, size: 18),
+                        const SizedBox(width: 4),
+                        Text(
+                          displayUsername,
+                          style: const TextStyle(
+                            color: Colors.teal,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Icon(Icons.arrow_drop_down, color: Colors.teal, size: 16),
+                      ],
+                    ),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'profile',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.account_circle, size: 18, color: Colors.teal),
+                            const SizedBox(width: 8),
+                            Text('$displayUsername\'s Profile'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout, size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Logout Offline', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (val) {
+                      if (val == 'logout') {
+                        authController.logout();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Logged out successfully!'),
+                            behavior: SnackBarBehavior.floating,
+                            width: 250,
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Selected $val'),
+                            behavior: SnackBarBehavior.floating,
+                            width: 250,
+                          ),
+                        );
+                      }
+                    },
+                  );
                 },
               ),
             ],
           ),
-          const Row(
-            children: [
-              Icon(Icons.monitor_heart, color: Colors.teal, size: 20),
-              SizedBox(width: 4),
-              Text('ApniLab.pk LMS Demo',
-                  style: TextStyle(
-                      color: Colors.teal, fontWeight: FontWeight.w600)),
-            ],
-          )
+          const SizedBox.shrink(),
         ],
       ),
     );
@@ -323,31 +693,7 @@ class _NavBar extends StatelessWidget {
               _NavDropdown('Reference Statements', items: const ['Doctor Commission', 'Lab Reference'], onNavigate: onNavigate),
             ],
           ),
-          Row(
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1976D2),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4)),
-                ),
-                icon: const Icon(Icons.video_library, size: 16),
-                label: const Text('Training Playlist'),
-              ),
-              const SizedBox(width: 16),
-              const Icon(Icons.error_outline, color: Colors.orange, size: 20),
-              const SizedBox(width: 4),
-              const Text('-99', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(width: 16),
-              const CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.grey,
-                child: Icon(Icons.person, color: Colors.white),
-              )
-            ],
-          )
+          const SizedBox.shrink(),
         ],
       ),
     );
@@ -453,32 +799,10 @@ class _DashboardTitleRowState extends State<_DashboardTitleRow> {
             const Icon(Icons.speed, size: 32),
             const SizedBox(width: 8),
             const Text(
-              'ApniLab.pk Dashboard',
+              'SHAH-RUKN-ALAM LAB ',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(width: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                showDialog(context: context, builder: (_) => const AddPatientDialog());
-              },
-              icon: const Icon(Icons.person_add),
-              label: const Text('New Patient'),
-            ),
-            const SizedBox(width: 8),
-            OutlinedButton.icon(
-              onPressed: () {
-                 for (var p in labController.patients) {
-                   if (p.status == PatientStatus.pendingSample) {
-                     labController.updatePatientStatus(p.id, PatientStatus.pendingReport);
-                   } else if (p.status == PatientStatus.pendingReport) {
-                     labController.updatePatientStatus(p.id, PatientStatus.approved);
-                   }
-                 }
-              },
-              icon: const Icon(Icons.autorenew),
-              label: const Text('Process Demo'),
-            ),
-            const SizedBox(width: 16),
             Text('All',
                 style: TextStyle(
                     fontSize: 16,
@@ -681,28 +1005,12 @@ class _Footer extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                '© 2024 - ApniLab.Pk - Powered by ASH-Advance Software House | www.ash.com.pk',
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Text(
+                ' - SHAH-RUKN-ALAM LAB - Powered by Good Luck Software House ',
                 style: TextStyle(color: Colors.grey),
               ),
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.message, size: 16),
-                label: const Text('Set SMS'),
-              ),
-              Row(
-                children: [
-                  const Text('Get the App: ',
-                      style: TextStyle(color: Colors.grey)),
-                  Icon(Icons.android, color: Colors.blue[700]),
-                  const SizedBox(width: 8),
-                  Icon(Icons.apple, color: Colors.blue[700]),
-                  const SizedBox(width: 8),
-                  Icon(Icons.desktop_windows, color: Colors.blue[700]),
-                ],
-              )
             ],
           ),
         ),

@@ -198,14 +198,20 @@ class LabController extends ChangeNotifier {
     _categories = prefs.getStringList('categories') ?? ['Biochemistry', 'Hematology', 'Serology', 'Hormones', 'Clinical Pathology', 'Microbiology'];
 
     // Load Settings
-    _labName = prefs.getString('lab_name') ?? 'ApniLab.pk';
-    _labAddress = prefs.getString('lab_address') ?? '123 Medical Complex, City';
-    _labPhone = prefs.getString('lab_phone') ?? '0300-1234567';
+    _labName = prefs.getString('lab_name') ?? 'SHAH-RUKN-ALAM CLINICAL LABORATORY';
+    _labAddress = prefs.getString('lab_address') ?? 'RABBANI CHOWK MASOOM SHAH ROAD MULTAN';
+    _labPhone = prefs.getString('lab_phone') ?? '0306-6898337';
     _branches = prefs.getStringList('branches') ?? ['Main Branch', 'City Branch'];
     _printerType = prefs.getString('printer_type') ?? 'A4 / Laser';
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> reloadFromStorage() async {
+    _isLoading = true;
+    notifyListeners();
+    await _loadData();
   }
 
   Future<void> _saveData() async {
